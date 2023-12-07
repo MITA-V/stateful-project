@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-statefulset
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels: {{ .Values.labels | toYaml | nindent 4 }}
+spec:
+  selector:
+    matchLabels: {{ .Values.selectors.matchLabels | toYaml | nindent 6 }}
+  serviceName: "{{ .Release.Name }}-statefulset"
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels: {{ .Values.labels | toYaml | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 10 }}
+      initContainers:
+        - name: init-script
+          image: alpine:latest
+          command:
+          - "/bin/ash"
+          - "-c"
+          - |
+            {{- range .Values.containerConfig.envVars }}
+            echo "{{ .name }}={{ .value }}" >> /etc/my-config/config.cfg
+            {{- end }}
+            sleep 80
+          volumeMounts:
+          - name: config-volume
+            mountPath: "/etc/my-config"
+      containers:
+      - name: {{ .Release.Name }}-app
+        image: {{ .Values.containerConfig.image.repository }}:{{ .Values.containerConfig.image.tag }}
+        ports:  
+        - containerPort: {{ .Values.serviceConfig.port }} 
+          name: http 
+        volumeMounts:
+        - name: data-volume
+          mountPath: "/var/my-data"
+        - name: config-volume
+          mountPath: "/etc/my-config"
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-configmap
+        {{- if .Values.probes.readiness.enabled }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.probes.readiness.path }}
+            port: {{ .Values.probes.readiness.port }}
+          initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+        {{- end }}
+        {{- if .Values.probes.liveness.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.probes.liveness.path }}
+            port: {{ .Values.probes.liveness.port }}
+          initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+        {{- end }}
+        {{- if .Values.securityContext.enable }}
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+        {{- end }}
+        {{- if .Values.resources.enable }}
+        resources:
+          requests:
+            cpu: {{ .Values.resources.requests.memory }}
+            memory: {{ .Values.resources.requests.cpu }}
+          limits:
+            cpu: {{ .Values.resources.limits.memory }}
+            memory: {{ .Values.resources.limits.cpu }}
+        {{- end }}
+      volumes:
+      - name: config-volume
+        configMap:
+          name: {{ .Release.Name }}-configmap
+  volumeClaimTemplates:
+  - metadata:
+      name: data-volume
+    spec:
+      storageClassName: {{ .Values.storageClass }}
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: {{ .Values.volumeSize }}

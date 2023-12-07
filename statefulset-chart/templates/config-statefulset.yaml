@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  {{- if .Values.containerConfig.envVars }}
+  {{- range .Values.containerConfig.envVars }}
+      {{ .name }}: {{ .value }}
+  {{- end }}
+  {{- end }}

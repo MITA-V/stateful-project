@@ -1,0 +1,4 @@
+helmfiles:
+  - path: ../../different_helm_configs\helmfile_postgres.yaml
+
+  # - path: ../../different_helm_configs\helmfile_mysql.yaml

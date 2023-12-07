@@ -1,0 +1,41 @@
+releases:
+  - name: postgresql-stateful
+    namespace: default
+    chart: "C:/Users/Michi/stateful-project/statefulset-chart"
+    version: 0.1.0
+    values:
+    - replicaCount: 1
+      containerConfig:
+        image:
+          repository: postgres
+          tag: latest
+        envVars:
+          - name: POSTGRES_USER
+            value: "myuser123"
+          - name: POSTGRES_PASSWORD
+            value: "verystrongpassword"
+          - name: POSTGRES_DB
+            value: "mydatabase123"
+      storageClass: "standard" # Ist als Standard in Minikube hinterlegt gewesen
+      volumeSize: 1Gi
+      serviceConfig:
+        port: 5432
+        targetPort: 5432
+        protocol: TCP
+        clusterIP: None
+      labels:
+        app: postgres
+        tier: database
+        component: backend
+      selectors:
+        matchLabels:
+          app: postgres
+          tier: database
+          component: backend
+      resources:
+        requests:
+          memory: 64Mi
+          cpu: 50m
+        limits:
+          memory: 128Mi
+          cpu: 100m

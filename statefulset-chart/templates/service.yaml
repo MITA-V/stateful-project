@@ -1,0 +1,19 @@
+# my-statefulset/templates/service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-statefulset-service
+  labels:
+    app: {{ .Release.Name }}-statefulset
+spec:
+  selector:
+      app: {{ default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}-statefulset
+  ports:
+  - port: {{ .Values.serviceConfig.port }}
+    targetPort: {{ .Values.serviceConfig.targetPort }}
+    protocol: {{ .Values.serviceConfig.protocol }}
+    name: http-port
+  clusterIP: {{ .Values.serviceConfig.clusterIP }}
+  selector:
+    app: {{ .Release.Name }}-statefulset

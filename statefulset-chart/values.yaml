@@ -1,0 +1,62 @@
+
+namespace: "default"
+labels:
+  firstDummyLabel: dummy1
+  secondDummyLabel: dummy2
+selectors:
+  matchLabels:
+    firstDummyLabel: dummy1
+    secondDummyLabel: dummy2
+
+replicaCount: 3
+
+containerConfig:
+  image:
+    repository: registry/image
+    tag: imagetag
+  envVars:
+    - name: EXAMPLE_ENV_VAR
+      value: "example_val"
+
+storageClass: "standard"
+
+volumeSize: 1Gi
+
+serviceConfig:
+  port: 3000
+  targetPort: 3000
+  protocol: TCP
+  clusterIP: None
+
+probes:
+  readiness:
+    enabled: false
+    path: /setyourendpoint
+    port: 3000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  liveness:
+    enabled: false
+    path: /setyourendpoint
+    port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 20
+
+securityContext:
+  enable: false
+  allowedUID: 999999
+  serviceAccount:
+    create: true
+    name: ""
+    automount: true
+    runAsUser: 1000
+    runAsGroup: 1000
+
+resources:
+  enable: false
+  requests:
+    memory: 128Mi
+    cpu: 250m
+  limits:
+    memory: 256Mi
+    cpu: 500m
