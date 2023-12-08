@@ -46,9 +46,6 @@ securityContext:
   enable: false
   allowedUID: 999999
   serviceAccount:
-    create: true
-    name: ""
-    automount: true
     runAsUser: 1000
     runAsGroup: 1000
 
